@@ -32,6 +32,7 @@ struct EclSection
     data::Vector{}
     function EclSection(file::IOStream)
         kwd = readstring(file)
+        #println("DBG : Section found: $kwd")
         # Dimension, number of data points
         dim = readlong(file)
         dtype = readchar(file)
@@ -89,6 +90,6 @@ end
 
 #a = EclFile("NORNE/NORNE_ATW2013.SMSPEC")
 #b = EclFile("NORNE/NORNE_ATW2013.UNSMRY")
-c = EclFile("NORNE_ATW2013.UNRST")
-println(c.data[23]) #.data[390:400])
+#c = EclFile("NORNE_ATW2013.UNRST")
+#println(c.data[23]) #.data[390:400])
 
