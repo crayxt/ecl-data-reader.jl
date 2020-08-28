@@ -193,7 +193,7 @@ function read_results(smspec_file::String, kwd::String)
    return(df);
 end
 
-function read_all_results(smspec_file::String, mask)
+function read_all_results(smspec_file::String, mask::Regex)
    # Full path without extension. Does not support multiple UNSMRY files yet.
    # mask is like r"^W"
    println("INFO: Reading all results from file: $smspec_file")
@@ -209,12 +209,34 @@ function read_all_results(smspec_file::String, mask)
       objs = fget(k, "NAMES")
    end
    kwd_idx = grep(mask, vecs.data)
-   kwds = vecs.data[kwd_idx]
+   unique_kwds = unique(vecs.data[kwd_idx])
+   time_idx = grep(r"^TIME$", vecs.data)
+   reals = grep(r"^:+", objs.data, invert=true)
+   real_kwd_idx = intersect(kwd_idx, reals)
+   kwd_and_time = vcat(time_idx, real_kwd_idx)
+   kwds = vecs.data[kwd_and_time]
+   println("kwds: ", length(kwds))
+   # Get all data combined row-wise from UNSMRY PARAMS sections.
+   kwd_data = fdata(l, kwd_and_time)
+   println("rows: ", size(kwd_data)[1])
+   println("cols: ", size(kwd_data)[2])
+   cols = objs.data[kwd_and_time]
+   cols[1] = "TIME"
+   # Get column names
+   cols = objs.data[kwd_and_time]
+   cols[1] = "TIME"
    dfs = []
-   for kwd in unique(kwds)
-       println("INFO: Reading vector $kwd")
-       df_tmp = fdf(k, l, kwd)
-       df_tmp = stack(df_tmp, Not([:TIME]), variable_name="WELL", value_name=kwd)
+   for vec in unique_kwds
+       println("INFO: Collecting vector: $vec")
+       vec_idx = grep(vec, kwds, exact=true)
+       vec_idx = vcat(time_idx, vec_idx)
+       #print(vec_idx)
+       columns = cols[vec_idx]
+       #print(col_idx)
+       df_tmp = DataFrame(kwd_data[:,vec_idx], columns, makeunique=true)
+       # Drop duplicated columns
+       select!(df_tmp, unique(columns))
+       df_tmp = stack(df_tmp, Not([:TIME]), variable_name="WELL", value_name=vec)
        push!(dfs, df_tmp)
    end
    println("INFO: Concatenating results...")
