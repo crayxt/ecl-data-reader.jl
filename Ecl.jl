@@ -24,12 +24,12 @@ struct EclSection
         kwd = readstring(file)
         #println("DBG : Section found: $kwd")
         # Dimension, number of data points
-        dim = readlong(file)
+        dim = readlong(file)::Int32
         #println("DBG : Dimension: $dim")
         dtype = readstring(file, 4)
         #println("DBG : Data type: $dtype")
         # endianness sign
-        endi2 = readlong(file)
+        endi2 = readlong(file)::Int32
         if dtype == "CHAR" || dtype == "MESS"
             stp   = String
             nsize = 8
@@ -50,7 +50,7 @@ struct EclSection
             exit
         end
         data = Array{stp}(undef, dim)
-        counter = 1
+        counter::Int64 = 1
         while counter <= dim
             NBYTES = readlong(file)
             num = Int(NBYTES/nsize)
@@ -113,7 +113,7 @@ function fwidth(k::EclFile)
     return 0;
 end
 
-function fget(k::EclFile, section)
+function fget(k::EclFile, section::String)
     # Returns the first occurence of section by its name.
     for s in k.data
         if s.kwd == section
@@ -144,7 +144,7 @@ function fdata(k::EclFile)
     return fdata(k, 1:fwidth(k));
 end
 
-function grep(str, data; exact::Bool=false, invert::Bool=false)
+function grep(str::Union{String,Regex}, data; exact::Bool=false, invert::Bool=false)
     # c = findall(x -> match(r"^W", x), fget(a, "KEYWORDS").data);
     if exact == true
         check = isequal
@@ -158,7 +158,7 @@ function grep(str, data; exact::Bool=false, invert::Bool=false)
     end
 end
 
-function fdf(k, l, kwd, exact::Bool=false)
+function fdf(k::EclFile, l::EclFile, kwd::String, exact::Bool=false)
    # Build a DataFrame.
    # k - SMSPEC, l - UMSMRY, kwd like "WBHP"
    vecs = fget(k, "KEYWORDS")
@@ -181,7 +181,7 @@ function fdf(k, l, kwd, exact::Bool=false)
    return(df);
 end
 
-function read_results(smspec_file, kwd)
+function read_results(smspec_file::String, kwd::String)
    # Full path without extension. Does not support multiple UNSMRY files yet.
    println("INFO: Reading results from file: $smspec_file")
    filemask    = splitext(smspec_file)[1]
@@ -193,7 +193,7 @@ function read_results(smspec_file, kwd)
    return(df);
 end
 
-function read_all_results(smspec_file, mask)
+function read_all_results(smspec_file::String, mask)
    # Full path without extension. Does not support multiple UNSMRY files yet.
    # mask is like r"^W"
    println("INFO: Reading all results from file: $smspec_file")
