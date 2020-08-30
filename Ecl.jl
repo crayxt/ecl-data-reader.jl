@@ -86,22 +86,29 @@ struct EclFile
     end
 end
 
-function fdescribe(k::EclFile)
+function fdescribe(k::EclFile, name::String="")
    # List sections of EclFile in form: Keyword, Data Type, Dimension.
+   # If name is specified, filter sections with kwd == `name`.
    println("INFO: Sections of file: $(k.filename)")
-   for s in k.data
+   if name == ""
+       data = k.data
+   else
+       data = [ i for i in k.data if i.kwd == name ]
+   end
+   for s in data
       println(rpad(s.kwd, 10), rpad(s.dtype, 10), lpad(s.dim, 12))
    end
 end
 
-function flen(k::EclFile)
-    counter = 0
-    for s in k.data
-        if s.kwd == "PARAMS"
-            counter += 1
-        end
+function fcount(k::EclFile, name::String="")
+    # Count number of sections named `name`, for example "PARAMS"
+    # If name is not specified, count all sections.
+    if name == ""
+        data = k.data
+    else
+        data = [ i for i in k.data if i.kwd == name ]
     end
-    return counter;
+    return length(data);
 end
 
 function fwidth(k::EclFile)
